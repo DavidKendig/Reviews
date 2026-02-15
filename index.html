@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DavidKendig.Info Media Reviews</title>
+    <!--
+    ============================================================
+    DAVIDKENDIG.INFO MEDIA REVIEWS - Personal Media Tracking & Review Site
+    ============================================================
+    DEVELOPER NOTES (for future content additions):
+
+    1. ALL content within each tab is listed in ALPHABETICAL ORDER.
+       When adding new entries, insert them in the correct alphabetical
+       position within the media-grid for that tab.
+
+    2. Each media card follows this HTML structure:
+       <div class="media-card" data-platform="PLATFORM_NAME_IF_VIDEOGAME">
+           <div class="media-poster">
+               <img src="IMAGE_URL" alt="Title">
+           </div>
+           <div class="media-info">
+               <h3>Title</h3>
+               <p class="media-year">Year / Details</p>
+               <div class="media-rating">★★★★★ or partial</div>
+               <p class="media-review">Your review text here.</p>
+           </div>
+       </div>
+
+    3. RATINGS: Use ★ for filled stars and ☆ for empty stars (out of 5).
+
+    4. VIDEO GAMES: Add data-platform="xbox|playstation|nintendo|pc|multi"
+       to the .media-card div. This colors the card border/accent:
+       - Xbox = green (#107C10)
+       - PlayStation = blue (#003087)
+       - Nintendo = red (#E60012)
+       - PC = gray/silver (#8B8B8B)
+       - Multi = purple (#6B2FA0)
+
+    5. BOX ART / POSTERS: Uses open image sources:
+       - Movies: IMDB via Amazon CDN (m.media-amazon.com)
+         Search IMDB for the film, inspect the poster image, copy the
+         m.media-amazon.com URL. Use ._V1_SX300.jpg suffix for 300px width.
+       - TV: IMDB via Amazon CDN
+       - Books: Open Library covers (covers.openlibrary.org)
+       - Comics: Direct publisher / wiki images
+       - Video Games: Wikipedia or publisher images
+       - Board/Card Games: BoardGameGeek or direct source images
+       - TTRPGs: Publisher images
+
+    6. TABS: Movies | TV | Books | Comics | Video Games | Board Games | Card Games | TTRPGs
+       Each tab content is in a <div class="tab-content" id="tabname">
+
+    7. To add a new tab entry, find the correct tab-content div and
+       add a new media-card in alphabetical order.
+
+    8. MODERN JS EFFECTS (auto-applied):
+       - Animated particle canvas background
+       - Scroll-reveal staggered card entrance animations
+       - 3D tilt effect on card hover (mouse-tracking)
+       - Glassmorphism header with blur
+       - Smooth animated tab indicator slider
+       - Glow cursor trailing effect
+       - Parallax floating orbs in background
+       All effects are handled in app.js (separate file).
+    ============================================================
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #06080d;
+            --bg-secondary: rgba(12, 16, 24, 0.8);
+            --bg-card: rgba(18, 24, 38, 0.7);
+            --bg-card-hover: rgba(28, 38, 58, 0.85);
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.4);
+            --accent-hover: #79b8ff;
+            --border: rgba(48, 54, 61, 0.6);
+            --border-glow: rgba(88, 166, 255, 0.15);
+            --star-color: #f0c040;
+            --star-empty: #3d4450;
+            --tab-active: #58a6ff;
+            --tab-inactive: #6e7681;
+            --xbox: #107C10;
+            --playstation: #003087;
+            --nintendo: #E60012;
+            --pc: #8B8B8B;
+            --multi: #6B2FA0;
+            --glass-bg: rgba(12, 16, 24, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(88, 166, 255, 0.3) transparent;
+        }
+        html::-webkit-scrollbar { width: 6px; }
+        html::-webkit-scrollbar-track { background: transparent; }
+        html::-webkit-scrollbar-thumb {
+            background: rgba(88, 166, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ============================================================
+           ANIMATED BACKGROUND - Canvas + Floating Orbs
+           ============================================================ */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 0;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, #58a6ff, transparent 70%);
+            top: -200px; left: -100px;
+            animation-delay: 0s;
+        }
+        .orb-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, #a855f7, transparent 70%);
+            bottom: -150px; right: -100px;
+            animation-delay: -7s;
+        }
+        .orb-3 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, #22d3ee, transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 40px) scale(0.95); }
+            75% { transform: translate(30px, 20px) scale(1.02); }
+        }
+
+        /* Cursor glow trail */
+        .cursor-glow {
+            position: fixed;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(88, 166, 255, 0.06), transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            transform: translate(-50%, -50%);
+            transition: left 0.3s ease-out, top 0.3s ease-out;
+        }
+
+        /* ============================================================
+           GLASSMORPHISM HEADER
+           ============================================================ */
+        .site-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(1.5);
+            -webkit-backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.25rem 2rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .site-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .site-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .site-link:hover {
+            color: var(--accent);
+        }
+
+        .site-title span {
+            background: linear-gradient(135deg, #58a6ff, #a855f7, #22d3ee);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 6s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* ============================================================
+           TAB NAVIGATION - Animated sliding indicator
+           ============================================================ */
+        .tab-nav {
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+            position: relative;
+        }
+        .tab-nav::-webkit-scrollbar { height: 0; }
+
+        .tab-indicator {
+            position: absolute;
+            bottom: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #58a6ff, #a855f7);
+            border-radius: 2px;
+            transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--tab-inactive);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: transparent;
+        }
+
+        .tab-btn .tab-count {
+            font-size: 0.65rem;
+            font-weight: 600;
+            background: rgba(48, 54, 61, 0.6);
+            color: var(--text-muted);
+            padding: 0.1rem 0.5rem;
+            border-radius: 10px;
+            margin-left: 0.35rem;
+            vertical-align: middle;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active .tab-count {
+            background: rgba(88, 166, 255, 0.15);
+            color: var(--accent);
+        }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-header {
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(15px);
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .tab-header p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+            font-weight: 300;
+        }
+
+        /* ============================================================
+           MEDIA GRID - Full-width single-column stacked cards
+           Cards span the full available width.
+           All entries in ALPHABETICAL ORDER.
+           ============================================================ */
+        .media-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* ============================================================
+           MEDIA CARD - Full-width Glassmorphism + 3D tilt
+           Cards are full-width with poster on the left and info
+           filling the remaining space.
+           ============================================================ */
+        .media-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1),
+                        box-shadow 0.4s ease,
+                        border-color 0.4s ease,
+                        background 0.4s ease;
+            cursor: default;
+            will-change: transform;
+            transform-style: preserve-3d;
+            perspective: 800px;
+            /* Scroll-reveal: starts hidden, JS reveals */
+            opacity: 0;
+            transform: translateY(40px) scale(0.97);
+        }
+
+        .media-card.revealed {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            transition: opacity 0.6s cubic-bezier(0.2, 0, 0.2, 1),
+                        transform 0.6s cubic-bezier(0.2, 0, 0.2, 1),
+                        box-shadow 0.4s ease,
+                        border-color 0.4s ease,
+                        background 0.4s ease;
+        }
+
+        .media-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-glow);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4),
+                        0 0 30px rgba(88, 166, 255, 0.06),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        /* Video Game Platform Color Borders */
+        .media-card[data-platform="xbox"] { border-left: 3px solid var(--xbox); }
+        .media-card[data-platform="xbox"]:hover {
+            border-color: var(--xbox);
+            box-shadow: 0 12px 40px rgba(16, 124, 16, 0.15), 0 0 20px rgba(16, 124, 16, 0.1);
+        }
+        .media-card[data-platform="playstation"] { border-left: 3px solid var(--playstation); }
+        .media-card[data-platform="playstation"]:hover {
+            border-color: var(--playstation);
+            box-shadow: 0 12px 40px rgba(0, 48, 135, 0.15), 0 0 20px rgba(0, 48, 135, 0.1);
+        }
+        .media-card[data-platform="nintendo"] { border-left: 3px solid var(--nintendo); }
+        .media-card[data-platform="nintendo"]:hover {
+            border-color: var(--nintendo);
+            box-shadow: 0 12px 40px rgba(230, 0, 18, 0.15), 0 0 20px rgba(230, 0, 18, 0.1);
+        }
+        .media-card[data-platform="pc"] { border-left: 3px solid var(--pc); }
+        .media-card[data-platform="pc"]:hover {
+            border-color: var(--pc);
+            box-shadow: 0 12px 40px rgba(139, 139, 139, 0.15), 0 0 20px rgba(139, 139, 139, 0.1);
+        }
+        .media-card[data-platform="multi"] { border-left: 3px solid var(--multi); }
+        .media-card[data-platform="multi"]:hover {
+            border-color: var(--multi);
+            box-shadow: 0 12px 40px rgba(107, 47, 160, 0.15), 0 0 20px rgba(107, 47, 160, 0.1);
+        }
+
+        .media-poster {
+            width: 150px;
+            min-width: 150px;
+            min-height: 200px;
+            overflow: hidden;
+            background: rgba(10, 14, 22, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .media-poster::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 70%, rgba(18, 24, 38, 0.5));
+            pointer-events: none;
+        }
+
+        .media-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s cubic-bezier(0.2, 0, 0.2, 1), filter 0.5s ease;
+            filter: brightness(0.9) contrast(1.05);
+        }
+
+        .media-card:hover .media-poster img {
+            transform: scale(1.08);
+            filter: brightness(1) contrast(1.1);
+        }
+
+        .media-info {
+            padding: 1rem 1.25rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            min-width: 0;
+            justify-content: center;
+        }
+
+        .media-info h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+            letter-spacing: -0.2px;
+        }
+
+        .media-year {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .media-rating {
+            font-size: 1rem;
+            letter-spacing: 2px;
+            color: var(--star-color);
+            text-shadow: 0 0 8px rgba(240, 192, 64, 0.3);
+        }
+
+        .media-rating .empty {
+            color: var(--star-empty);
+            text-shadow: none;
+        }
+
+        .media-review {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-top: 0.2rem;
+            font-weight: 300;
+        }
+
+        .platform-badge {
+            display: inline-block;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            margin-top: 0.15rem;
+            width: fit-content;
+            backdrop-filter: blur(4px);
+        }
+
+        .platform-badge.xbox { background: rgba(16, 124, 16, 0.2); color: #4caf50; border: 1px solid rgba(16, 124, 16, 0.3); }
+        .platform-badge.playstation { background: rgba(0, 48, 135, 0.2); color: #5c8dd6; border: 1px solid rgba(0, 48, 135, 0.3); }
+        .platform-badge.nintendo { background: rgba(230, 0, 18, 0.2); color: #ff4444; border: 1px solid rgba(230, 0, 18, 0.3); }
+        .platform-badge.pc { background: rgba(139, 139, 139, 0.2); color: #b0b0b0; border: 1px solid rgba(139, 139, 139, 0.3); }
+        .platform-badge.multi { background: rgba(107, 47, 160, 0.2); color: #b07ce8; border: 1px solid rgba(107, 47, 160, 0.3); }
+
+        /* ============================================================
+           RESPONSIVE - Mobile-first friendly
+           ============================================================ */
+
+        /* Tablet */
+        @media (max-width: 768px) {
+            .site-header {
+                padding: 0.75rem 0.75rem 0;
+            }
+            .site-title {
+                font-size: 1.3rem;
+                margin-bottom: 0.6rem;
+            }
+            .main-content {
+                padding: 1rem 0.75rem;
+            }
+            .tab-btn {
+                font-size: 0.75rem;
+                padding: 0.6rem 0.65rem;
+            }
+            .tab-btn .tab-count {
+                font-size: 0.6rem;
+                padding: 0.05rem 0.35rem;
+                margin-left: 0.2rem;
+            }
+            .tab-nav {
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+            }
+            .tab-btn {
+                scroll-snap-align: start;
+            }
+            .media-poster {
+                width: 120px;
+                min-width: 120px;
+                min-height: 170px;
+            }
+            .media-info {
+                padding: 0.85rem 1rem;
+            }
+            .media-info h3 {
+                font-size: 0.95rem;
+            }
+            .media-review {
+                font-size: 0.8rem;
+            }
+            .orb { display: none; }
+            .cursor-glow { display: none; }
+        }
+
+        /* Small mobile */
+        @media (max-width: 480px) {
+            .site-header {
+                padding: 0.6rem 0.5rem 0;
+            }
+            .site-title {
+                font-size: 1.1rem;
+                margin-bottom: 0.5rem;
+            }
+            .main-content {
+                padding: 0.75rem 0.5rem;
+            }
+            .media-grid {
+                gap: 0.75rem;
+            }
+            .media-card {
+                border-radius: 12px;
+                flex-direction: column;
+            }
+            .media-poster {
+                width: 100%;
+                min-width: 100%;
+                height: 200px;
+                min-height: 200px;
+            }
+            .media-poster::after {
+                background: linear-gradient(180deg, transparent 60%, rgba(18, 24, 38, 0.7));
+            }
+            .media-info {
+                padding: 0.85rem;
+            }
+            .media-info h3 {
+                font-size: 1rem;
+            }
+            .media-review {
+                font-size: 0.82rem;
+                line-height: 1.55;
+            }
+            .tab-btn {
+                font-size: 0.7rem;
+                padding: 0.55rem 0.5rem;
+            }
+            .tab-header h2 {
+                font-size: 1.2rem;
+            }
+            .tab-header p {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background effects -->
+    <canvas id="bg-canvas"></canvas>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- ============================================================
+         HEADER & TAB NAVIGATION
+         ============================================================ -->
+    <header class="site-header">
+        <div class="header-inner">
+            <h1 class="site-title"><a href="https://davidkendig.info" class="site-link">DavidKendig.Info</a> <span>Media Reviews</span></h1>
+            <nav class="tab-nav" id="tabNav">
+                <button class="tab-btn active" data-tab="movies">Movies <span class="tab-count">0</span></button>
+                <button class="tab-btn" data-tab="tv">TV <span class="tab-count">0</span></button>
+                <button class="tab-btn" data-tab="books">Books <span class="tab-count">0</span></button>
+                <button class="tab-btn" data-tab="comics">Comics <span class="tab-count">0</span></button>
+                <button class="tab-btn" data-tab="videogames">Video Games <span class="tab-count">0</span></button>
+                <button class="tab-btn" data-tab="boardgames">Board Games <span class="tab-count">0</span></button>
+                <button class="tab-btn" data-tab="cardgames">Card Games <span class="tab-count">0</span></button>
+                <button class="tab-btn" data-tab="ttrpgs">TTRPGs <span class="tab-count">0</span></button>
+                <!-- Animated sliding indicator bar -->
+                <div class="tab-indicator" id="tabIndicator"></div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+
+        <!-- Tab content is loaded dynamically from tabs/ directory by app.js -->
+        <div class="tab-content active" id="movies"></div>
+        <div class="tab-content" id="tv"></div>
+        <div class="tab-content" id="books"></div>
+        <div class="tab-content" id="comics"></div>
+        <div class="tab-content" id="videogames"></div>
+        <div class="tab-content" id="boardgames"></div>
+        <div class="tab-content" id="cardgames"></div>
+        <div class="tab-content" id="ttrpgs"></div>
+
+    </main>
+
+    <!-- JavaScript - Ultra Modern Effects (see app.js for documentation) -->
+    <script src="app.js" defer></script>
+
+</body>
+</html>
